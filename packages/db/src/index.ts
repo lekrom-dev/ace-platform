@@ -5,4 +5,8 @@
 
 export const dbVersion = '0.0.0'
 
-// Supabase client and types will be added here
+// Export Supabase clients
+export { createServiceClient, createBrowserClient } from './client'
+
+// Export all types
+export * from './types'
