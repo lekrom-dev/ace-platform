@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import { engineVersion } from '@ace/engine-sdk';
-import { dbVersion } from '@ace/db';
+import Link from 'next/link'
+import { engineVersion } from '@ace/engine-sdk'
+import { dbVersion } from '@ace/db'
 
 export default function DashboardPage() {
   return (
@@ -45,12 +45,19 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow p-6">
           <h3 className="text-xl font-semibold mb-4">System Information</h3>
           <div className="space-y-2 text-sm">
-            <p><span className="font-medium">Engine SDK:</span> v{engineVersion}</p>
-            <p><span className="font-medium">Database:</span> v{dbVersion}</p>
-            <p><span className="font-medium">Status:</span> <span className="text-green-600">All systems operational</span></p>
+            <p>
+              <span className="font-medium">Engine SDK:</span> v{engineVersion}
+            </p>
+            <p>
+              <span className="font-medium">Database:</span> v{dbVersion}
+            </p>
+            <p>
+              <span className="font-medium">Status:</span>{' '}
+              <span className="text-green-600">All systems operational</span>
+            </p>
           </div>
         </div>
       </main>
     </div>
-  );
+  )
 }

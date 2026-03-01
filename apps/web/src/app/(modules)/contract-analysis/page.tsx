@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { Button } from '@ace/ui';
+import Link from 'next/link'
+import { Button } from '@ace/ui'
 
 export default function ContractAnalysisPage() {
   return (
@@ -7,7 +7,10 @@ export default function ContractAnalysisPage() {
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link href="/dashboard" className="text-xl font-semibold text-blue-600 hover:text-blue-700">
+            <Link
+              href="/dashboard"
+              className="text-xl font-semibold text-blue-600 hover:text-blue-700"
+            >
               ← Back to Dashboard
             </Link>
           </div>
@@ -51,5 +54,5 @@ export default function ContractAnalysisPage() {
         </div>
       </main>
     </div>
-  );
+  )
 }

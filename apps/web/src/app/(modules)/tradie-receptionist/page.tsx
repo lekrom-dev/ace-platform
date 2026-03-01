@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { Button } from '@ace/ui';
+import Link from 'next/link'
+import { Button } from '@ace/ui'
 
 export default function TradieReceptionistPage() {
   return (
@@ -7,7 +7,10 @@ export default function TradieReceptionistPage() {
       <nav className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <Link href="/dashboard" className="text-xl font-semibold text-blue-600 hover:text-blue-700">
+            <Link
+              href="/dashboard"
+              className="text-xl font-semibold text-blue-600 hover:text-blue-700"
+            >
               ← Back to Dashboard
             </Link>
           </div>
@@ -24,7 +27,7 @@ export default function TradieReceptionistPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow p-6 mb-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold">Today's Appointments</h2>
+                <h2 className="text-2xl font-semibold">Today&apos;s Appointments</h2>
                 <Button>New Appointment</Button>
               </div>
 
@@ -67,7 +70,7 @@ export default function TradieReceptionistPage() {
               <h3 className="text-xl font-semibold mb-4">Quick Stats</h3>
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-600">Today's Appointments</p>
+                  <p className="text-sm text-gray-600">Today&apos;s Appointments</p>
                   <p className="text-2xl font-bold">5</p>
                 </div>
                 <div>
@@ -84,5 +87,5 @@ export default function TradieReceptionistPage() {
         </div>
       </main>
     </div>
-  );
+  )
 }

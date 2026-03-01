@@ -1,8 +1,8 @@
-import React from 'react';
+import React from 'react'
 
 export interface ButtonProps {
-  children: React.ReactNode;
-  onClick?: () => void;
+  children: React.ReactNode
+  onClick?: () => void
 }
 
 export function Button({ children, onClick }: ButtonProps) {
@@ -13,5 +13,5 @@ export function Button({ children, onClick }: ButtonProps) {
     >
       {children}
     </button>
-  );
+  )
 }

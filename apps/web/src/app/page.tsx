@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { Button } from '@ace/ui';
+import Link from 'next/link'
+import { Button } from '@ace/ui'
 
 export default function Home() {
   return (
@@ -33,5 +33,5 @@ export default function Home() {
         </div>
       </div>
     </main>
-  );
+  )
 }

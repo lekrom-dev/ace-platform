@@ -9,8 +9,13 @@
     "lint": "eslint . --ext .ts,.tsx",
     "test": "echo \"No tests yet\""
   },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.98.0",
+    "zod": "^3.25.76"
+  },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "supabase": "^2.76.15",
     "typescript": "^5.3.3"
   }
 }

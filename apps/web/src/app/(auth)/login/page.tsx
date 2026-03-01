@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { Button } from '@ace/ui';
+import Link from 'next/link'
+import { Button } from '@ace/ui'
 
 export default function LoginPage() {
   return (
@@ -37,7 +37,7 @@ export default function LoginPage() {
           </form>
 
           <p className="mt-6 text-center text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/signup" className="text-blue-600 hover:text-blue-500 font-medium">
               Sign up
             </Link>
@@ -45,5 +45,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

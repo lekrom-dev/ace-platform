@@ -1,5 +1,5 @@
-import Link from 'next/link';
-import { Button } from '@ace/ui';
+import Link from 'next/link'
+import { Button } from '@ace/ui'
 
 export default function SignupPage() {
   return (
@@ -57,5 +57,5 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
