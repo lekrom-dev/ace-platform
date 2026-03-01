@@ -11,3 +11,6 @@ export * from './logger'
 export * from './api-client'
 export * from './validators'
 export * from './utils'
+
+// Services
+export * from './auth'
