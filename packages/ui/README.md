@@ -8,7 +8,6 @@ Shared UI component library for the ACE Platform.
 
 ```tsx
 import { Button } from '@ace/ui'
-
 ;<Button onClick={() => console.log('clicked')}>Click me</Button>
 ```
 
@@ -16,7 +15,6 @@ import { Button } from '@ace/ui'
 
 ```tsx
 import { Input } from '@ace/ui'
-
 ;<Input
   label="Email"
   type="email"
@@ -30,7 +28,6 @@ import { Input } from '@ace/ui'
 
 ```tsx
 import { Card } from '@ace/ui'
-
 ;<Card padding="lg" hover>
   <Card.Header>
     <Card.Title>My Card</Card.Title>
@@ -43,7 +40,6 @@ import { Card } from '@ace/ui'
 
 ```tsx
 import { Label } from '@ace/ui'
-
 ;<Label htmlFor="email" required>
   Email Address
 </Label>
@@ -53,7 +49,6 @@ import { Label } from '@ace/ui'
 
 ```tsx
 import { Container } from '@ace/ui'
-
 ;<Container maxWidth="lg">
   <h1>Page Content</h1>
 </Container>
@@ -63,7 +58,6 @@ import { Container } from '@ace/ui'
 
 ```tsx
 import { Spinner } from '@ace/ui'
-
 ;<Spinner size="lg" />
 ```
 

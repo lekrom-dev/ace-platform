@@ -56,11 +56,7 @@ async function seed() {
         email: 'sarah@sparkelectric.com.au',
         phone: '+61 3 9123 4567',
         technology_stack: ['ServiceM8', 'Xero'],
-        pain_signals: [
-          'Slow response time',
-          'Booking conflicts',
-          'Customer complaints',
-        ],
+        pain_signals: ['Slow response time', 'Booking conflicts', 'Customer complaints'],
         enrichment_data: {
           confidence: 0.92,
           source: 'LinkedIn',
