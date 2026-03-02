@@ -10,38 +10,15 @@ import * as Sentry from '@sentry/nextjs'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  try {
-    // Debug: Check if Sentry is available
-    const sentryClient = Sentry.getClient()
-    const sentryDebug = {
-      clientExists: !!sentryClient,
-      dsn: sentryClient?.getOptions()?.dsn || 'NOT SET',
-      environment: sentryClient?.getOptions()?.environment || 'NOT SET',
-    }
+  // Trigger a test error for Sentry
+  const error = new Error('Sentry Test Error - This is intentional for testing error tracking!')
+  Sentry.captureException(error)
 
-    console.log('[Sentry Debug]', sentryDebug)
-
-    // Create and capture an error
-    const error = new Error('Sentry Test Error - This is intentional for testing error tracking!')
-    const eventId = Sentry.captureException(error)
-
-    console.log('[Sentry] Captured exception with eventId:', eventId)
-
-    // Also throw it to test automatic error capture
-    throw error
-  } catch (error) {
-    // Capture again to be sure
-    const eventId2 = Sentry.captureException(error)
-
-    console.log('[Sentry] Captured exception with eventId2:', eventId2)
-
-    return NextResponse.json(
-      {
-        message: 'Sentry test error triggered and captured!',
-        error: String(error),
-        sentryEventIds: [eventId2],
-      },
-      { status: 500 },
-    )
-  }
+  return NextResponse.json(
+    {
+      message: 'Sentry test error triggered!',
+      note: 'Check your Sentry dashboard to see this error',
+    },
+    { status: 200 },
+  )
 }
