@@ -23,7 +23,7 @@ export async function GET() {
 
     return NextResponse.json(
       { message: 'Sentry test error triggered and captured!', error: String(error) },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

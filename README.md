@@ -39,12 +39,14 @@ ACE Platform is built as a **pnpm monorepo** with the following structure:
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-org/ace-platform.git
    cd ace-platform
    ```
 
 2. **Install dependencies**
+
    ```bash
    pnpm install
    ```
@@ -52,6 +54,7 @@ ACE Platform is built as a **pnpm monorepo** with the following structure:
 3. **Set up environment variables**
 
    Copy the example env file and fill in your values:
+
    ```bash
    cp apps/web/.env.example apps/web/.env.local
    ```
@@ -66,6 +69,7 @@ ACE Platform is built as a **pnpm monorepo** with the following structure:
    - `/packages/db/supabase/migrations/003_auth_trigger.sql`
 
 5. **Seed the database (optional)**
+
    ```bash
    cd packages/db
    NEXT_PUBLIC_SUPABASE_URL="your-url" \
@@ -75,6 +79,7 @@ ACE Platform is built as a **pnpm monorepo** with the following structure:
    ```
 
 6. **Start the development server**
+
    ```bash
    pnpm dev
    ```
@@ -86,6 +91,7 @@ ACE Platform is built as a **pnpm monorepo** with the following structure:
 ### Creating Features
 
 1. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -97,17 +103,20 @@ ACE Platform is built as a **pnpm monorepo** with the following structure:
    - Run tests: `pnpm test`
 
 3. **Format your code**
+
    ```bash
    pnpm format
    ```
 
 4. **Commit your changes**
+
    ```bash
    git add .
    git commit -m "feat: your feature description"
    ```
 
 5. **Push and create a Pull Request**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -176,25 +185,25 @@ ace-platform/
 
 ### Required
 
-| Variable | Description | Where to get it |
-|----------|-------------|-----------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | Supabase Dashboard → Project Settings → API |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous/public key | Supabase Dashboard → Project Settings → API |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (bypasses RLS) | Supabase Dashboard → Project Settings → API |
-| `STRIPE_SECRET_KEY` | Stripe secret key | Stripe Dashboard → Developers → API keys |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key | Stripe Dashboard → Developers → API keys |
+| Variable                             | Description                              | Where to get it                             |
+| ------------------------------------ | ---------------------------------------- | ------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`           | Supabase project URL                     | Supabase Dashboard → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`      | Supabase anonymous/public key            | Supabase Dashboard → Project Settings → API |
+| `SUPABASE_SERVICE_ROLE_KEY`          | Supabase service role key (bypasses RLS) | Supabase Dashboard → Project Settings → API |
+| `STRIPE_SECRET_KEY`                  | Stripe secret key                        | Stripe Dashboard → Developers → API keys    |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key                   | Stripe Dashboard → Developers → API keys    |
 
 ### Optional (for full functionality)
 
-| Variable | Description | Where to get it |
-|----------|-------------|-----------------|
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | Stripe Dashboard → Developers → Webhooks |
-| `RESEND_API_KEY` | Resend API key for emails | resend.com → API Keys |
-| `ANTHROPIC_API_KEY` | Anthropic API key for Claude | console.anthropic.com → API Keys |
-| `SENTRY_DSN` | Sentry error tracking DSN | sentry.io → Project Settings |
-| `NEXT_PUBLIC_POSTHOG_KEY` | PostHog analytics API key | posthog.com → Project Settings |
-| `NEXT_PUBLIC_POSTHOG_HOST` | PostHog host URL | Usually `https://us.i.posthog.com` |
-| `NEXT_PUBLIC_APP_URL` | Your application URL | `http://localhost:3000` for dev |
+| Variable                   | Description                   | Where to get it                          |
+| -------------------------- | ----------------------------- | ---------------------------------------- |
+| `STRIPE_WEBHOOK_SECRET`    | Stripe webhook signing secret | Stripe Dashboard → Developers → Webhooks |
+| `RESEND_API_KEY`           | Resend API key for emails     | resend.com → API Keys                    |
+| `ANTHROPIC_API_KEY`        | Anthropic API key for Claude  | console.anthropic.com → API Keys         |
+| `SENTRY_DSN`               | Sentry error tracking DSN     | sentry.io → Project Settings             |
+| `NEXT_PUBLIC_POSTHOG_KEY`  | PostHog analytics API key     | posthog.com → Project Settings           |
+| `NEXT_PUBLIC_POSTHOG_HOST` | PostHog host URL              | Usually `https://us.i.posthog.com`       |
+| `NEXT_PUBLIC_APP_URL`      | Your application URL          | `http://localhost:3000` for dev          |
 
 ## Database Schema
 
@@ -210,6 +219,7 @@ The platform includes a comprehensive database schema with:
 ### Row Level Security (RLS)
 
 All tables have RLS policies enabled:
+
 - Service role bypasses RLS (for engine operations)
 - Authenticated users can only access their own data
 - Admins can access all data
@@ -229,7 +239,7 @@ const result = await auth.verifyUser(token)
 // Create user programmatically (bypasses email confirmation)
 const { user, authUser } = await auth.createUser(email, password, {
   full_name: 'John Doe',
-  business_name: 'Acme Corp'
+  business_name: 'Acme Corp',
 })
 
 // Get customer record by auth user ID
@@ -261,6 +271,7 @@ Add all required environment variables from the [Environment Variables](#environ
 ### Post-Deployment
 
 After deploying to Vercel:
+
 1. Update Supabase **redirect URLs** to include your Vercel domain
 2. Update Stripe **webhook URL** to your production domain
 3. Configure your custom domain in Vercel settings
@@ -306,6 +317,7 @@ The platform uses **Vitest** for testing:
 - Type-level tests for database schema
 
 Run tests:
+
 ```bash
 pnpm test                 # Run all tests
 pnpm test:watch          # Run tests in watch mode
