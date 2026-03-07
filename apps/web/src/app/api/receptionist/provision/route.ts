@@ -82,7 +82,7 @@ async function purchaseTwilioNumber(
   })
 
   if (!searchData.available_phone_numbers || searchData.available_phone_numbers.length === 0) {
-    // Fallback 1: try without location filters
+    // Fallback: try without location filters (Local numbers only, no Mobile)
     console.log('No numbers found with location filters, trying without filters...')
     const fallbackUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/AvailablePhoneNumbers/${twilioCountry}/Local.json?VoiceEnabled=true&SmsEnabled=true`
 
@@ -100,29 +100,6 @@ async function purchaseTwilioNumber(
       })
       if (fallbackData.available_phone_numbers?.length > 0) {
         searchData.available_phone_numbers = fallbackData.available_phone_numbers
-      }
-    }
-
-    // Fallback 2: try Mobile numbers (more readily available in AU)
-    if (!searchData.available_phone_numbers || searchData.available_phone_numbers.length === 0) {
-      console.log('No Local numbers found, trying Mobile numbers...')
-      const mobileUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/AvailablePhoneNumbers/${twilioCountry}/Mobile.json?VoiceEnabled=true&SmsEnabled=true`
-
-      const mobileResponse = await fetch(mobileUrl, {
-        method: 'GET',
-        headers: {
-          Authorization: `Basic ${twilioAuth}`,
-        },
-      })
-
-      if (mobileResponse.ok) {
-        const mobileData = await mobileResponse.json()
-        console.log(`Twilio Mobile results:`, {
-          count: mobileData.available_phone_numbers?.length || 0,
-        })
-        if (mobileData.available_phone_numbers?.length > 0) {
-          searchData.available_phone_numbers = mobileData.available_phone_numbers
-        }
       }
     }
 
