@@ -23,8 +23,24 @@ export function verifyWebhookSignature(
     hmac.update(payload)
     const expectedSignature = hmac.digest('hex')
 
+    // Debug logging
+    console.log('[Webhook Debug] Signature verification:', {
+      receivedSignature: signature,
+      receivedLength: signature.length,
+      expectedSignature: expectedSignature,
+      expectedLength: expectedSignature.length,
+      secretLength: secret.length,
+      payloadLength: payload.length,
+    })
+
     // Use constant-time comparison to prevent timing attacks
-    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature),
+    )
+
+    console.log('[Webhook Debug] Signature valid:', isValid)
+    return isValid
   } catch (error) {
     console.error('Webhook signature verification failed:', error)
     return false

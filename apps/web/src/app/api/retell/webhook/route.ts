@@ -25,17 +25,29 @@ export async function POST(request: NextRequest) {
     const body = await request.text()
     const signature = getSignatureFromHeaders(request.headers)
 
+    // Debug: Log all headers
+    console.log('[Retell Webhook] Headers:', {
+      'x-retell-signature': request.headers.get('x-retell-signature'),
+      'content-type': request.headers.get('content-type'),
+      'user-agent': request.headers.get('user-agent'),
+    })
+
     if (!signature) {
+      console.error('[Retell Webhook] Missing signature header')
       return NextResponse.json({ error: 'Missing signature header' }, { status: 401 })
     }
 
     const secret = getWebhookSecret()
+    console.log('[Retell Webhook] Secret loaded, length:', secret.length)
+
     const isValid = verifyWebhookSignature(body, signature, secret)
 
     if (!isValid) {
-      console.error('Invalid webhook signature')
+      console.error('[Retell Webhook] Invalid webhook signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
     }
+
+    console.log('[Retell Webhook] Signature verified successfully')
 
     // 2. Parse webhook event
     const event: RetellWebhookEvent = JSON.parse(body)
