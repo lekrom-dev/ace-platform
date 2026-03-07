@@ -147,6 +147,7 @@ async function purchaseTwilioNumber(
   console.log(`Found available number: ${availableNumber}`)
 
   // Purchase the number
+  // Note: VoiceUrl/SmsUrl will be configured by Retell AI when we register the number
   const purchaseUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/IncomingPhoneNumbers.json`
 
   const purchaseResponse = await fetch(purchaseUrl, {
@@ -157,8 +158,8 @@ async function purchaseTwilioNumber(
     },
     body: new URLSearchParams({
       PhoneNumber: availableNumber,
-      VoiceUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/retell/voice`,
-      SmsUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/retell/sms`,
+      // FriendlyName helps identify this number in Twilio console
+      FriendlyName: 'AI Receptionist - Retell',
     }).toString(),
   })
 
@@ -166,9 +167,21 @@ async function purchaseTwilioNumber(
     const errorText = await purchaseResponse.text()
     console.error('Twilio number purchase failed:', {
       status: purchaseResponse.status,
+      statusText: purchaseResponse.statusText,
       body: errorText,
+      phoneNumber: availableNumber,
     })
-    throw new Error(`Failed to purchase phone number: ${purchaseResponse.status}`)
+
+    // Parse Twilio error for better user message
+    let errorMessage = errorText
+    try {
+      const errorJson = JSON.parse(errorText)
+      errorMessage = errorJson.message || errorJson.error || errorText
+    } catch {
+      // If not JSON, use raw text
+    }
+
+    throw new Error(`Failed to purchase phone number: ${errorMessage}`)
   }
 
   const purchaseData = await purchaseResponse.json()
