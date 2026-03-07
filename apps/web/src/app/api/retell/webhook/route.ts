@@ -9,10 +9,16 @@ import type { Database } from '@ace/db'
 import { Retell } from 'retell-sdk'
 import type { RetellWebhookEvent } from '@/lib/retell/types'
 
-// Initialize Retell client
-const retell = new Retell({
-  apiKey: process.env.RETELL_API_KEY!,
-})
+// Lazy-load Retell client (only at runtime, not during build)
+let retellClient: Retell | null = null
+function getRetellClient() {
+  if (!retellClient) {
+    retellClient = new Retell({
+      apiKey: process.env.RETELL_API_KEY!,
+    })
+  }
+  return retellClient
+}
 
 // Initialize Supabase with service role key for server-side operations
 const supabase = createClient<Database>(
@@ -32,6 +38,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify using Retell SDK (uses RETELL_API_KEY)
+    const retell = getRetellClient()
     const isValid = retell.verify(body, process.env.RETELL_API_KEY!, signature)
 
     if (!isValid) {
