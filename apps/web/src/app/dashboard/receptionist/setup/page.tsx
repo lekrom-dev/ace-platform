@@ -10,19 +10,33 @@ import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@/lib/supabase/client'
 import { useUser } from '@/hooks/useUser'
 import Link from 'next/link'
+import { AddressForm, type AddressData } from './AddressForm'
 
 interface OnboardingStep {
   title: string
   completed: boolean
 }
 
+interface CustomerData {
+  id: string
+  name: string
+  business_name: string | null
+  city: string | null
+  state: string | null
+  street_address: string | null
+  postcode: string | null
+}
+
 export default function SetupPage() {
   const router = useRouter()
   const { user, loading: userLoading } = useUser()
+  const [customer, setCustomer] = useState<CustomerData | null>(null)
   const [aiPhoneNumber, setAiPhoneNumber] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [provisioning, setProvisioning] = useState(false)
   const [provisionError, setProvisionError] = useState<string | null>(null)
+  const [showAddressForm, setShowAddressForm] = useState(false)
+  const [savingAddress, setSavingAddress] = useState(false)
   const [forwardingMethod, setForwardingMethod] = useState<'conditional' | 'all'>('conditional')
   const [steps, setSteps] = useState<OnboardingStep[]>([
     { title: 'Enable Call Forwarding', completed: false },
@@ -40,21 +54,23 @@ export default function SetupPage() {
     const supabase = createBrowserClient()
 
     try {
-      const { data: customer } = await supabase
+      const { data: customerData } = await supabase
         .from('customers')
-        .select('id')
+        .select('id, name, business_name, city, state, street_address, postcode')
         .eq('auth_user_id', user!.id)
         .single()
 
-      if (!customer) {
+      if (!customerData) {
         setLoading(false)
         return
       }
 
+      setCustomer(customerData as CustomerData)
+
       const { data: tradieConfig } = await supabase
         .from('tradie_configs')
         .select('phone_number, is_active')
-        .eq('customer_id', customer.id)
+        .eq('customer_id', customerData.id)
         .single()
 
       if (tradieConfig?.phone_number) {
@@ -82,6 +98,47 @@ export default function SetupPage() {
     )
   }
 
+  // Check if customer has complete address before provisioning
+  function checkAddressAndProvision() {
+    if (!customer?.street_address || !customer?.postcode) {
+      setShowAddressForm(true)
+    } else {
+      handleProvision()
+    }
+  }
+
+  // Save customer address
+  async function handleAddressSubmit(addressData: AddressData) {
+    setSavingAddress(true)
+    setProvisionError(null)
+
+    try {
+      const response = await fetch('/api/customer/update-address', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(addressData),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Failed to save address')
+      }
+
+      // Reload customer data
+      await loadSetupData()
+
+      // Hide address form and proceed to provisioning
+      setShowAddressForm(false)
+      setSavingAddress(false)
+
+      // Now provision
+      handleProvision()
+    } catch (error: any) {
+      setProvisionError(error.message)
+      setSavingAddress(false)
+    }
+  }
+
   async function handleProvision() {
     setProvisioning(true)
     setProvisionError(null)
@@ -106,6 +163,22 @@ export default function SetupPage() {
   }
 
   if (!aiPhoneNumber) {
+    // Show address form if needed
+    if (showAddressForm && customer) {
+      return (
+        <div className="max-w-2xl mx-auto">
+          <AddressForm
+            businessName={customer.business_name || customer.name}
+            currentCity={customer.city || ''}
+            currentState={customer.state || ''}
+            onSubmit={handleAddressSubmit}
+            onCancel={() => setShowAddressForm(false)}
+            loading={savingAddress}
+          />
+        </div>
+      )
+    }
+
     return (
       <div className="max-w-3xl mx-auto">
         <div className="bg-white shadow rounded-lg p-8">
@@ -130,12 +203,12 @@ export default function SetupPage() {
 
           {provisionError && (
             <div className="mb-4 bg-red-50 border border-red-200 rounded p-4">
-              <p className="text-sm text-red-800">{provisionError}</p>
+              <p className="text-sm text-red-800 whitespace-pre-wrap">{provisionError}</p>
             </div>
           )}
 
           <button
-            onClick={handleProvision}
+            onClick={checkAddressAndProvision}
             disabled={provisioning}
             className="w-full bg-blue-600 text-white px-6 py-4 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >

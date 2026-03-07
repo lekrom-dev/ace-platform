@@ -20,6 +20,7 @@ async function purchaseTwilioNumber(
   country: string,
   state?: string,
   city?: string,
+  addressSid?: string,
 ): Promise<string> {
   const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID!
   const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN!
@@ -155,9 +156,9 @@ async function purchaseTwilioNumber(
     FriendlyName: 'AI Receptionist - Retell',
   }
 
-  // Add Address SID if available (required for Australian numbers)
-  if (process.env.TWILIO_ADDRESS_SID) {
-    purchaseParams.AddressSid = process.env.TWILIO_ADDRESS_SID
+  // Add Address SID (required for Australian numbers)
+  if (addressSid) {
+    purchaseParams.AddressSid = addressSid
   }
 
   const purchaseResponse = await fetch(purchaseUrl, {
@@ -196,6 +197,93 @@ async function purchaseTwilioNumber(
   return purchaseData.phone_number
 }
 
+/**
+ * Create or get Twilio Address for customer
+ */
+async function getOrCreateTwilioAddress(customer: {
+  id: string
+  name: string
+  business_name: string | null
+  street_address: string | null
+  city: string | null
+  state: string | null
+  postcode: string | null
+  twilio_address_sid: string | null
+}): Promise<string> {
+  // If customer already has a Twilio Address SID, return it
+  if (customer.twilio_address_sid) {
+    console.log(`Using existing Twilio Address SID: ${customer.twilio_address_sid}`)
+    return customer.twilio_address_sid
+  }
+
+  // Validate customer has complete address
+  if (!customer.street_address || !customer.city || !customer.state || !customer.postcode) {
+    throw new Error(
+      'Complete business address is required. Please provide street address, city, state, and postcode.',
+    )
+  }
+
+  const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID!
+  const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN!
+  const twilioAuth = Buffer.from(`${twilioAccountSid}:${twilioAuthToken}`).toString('base64')
+
+  // Create address in Twilio
+  const addressUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Addresses.json`
+
+  const addressResponse = await fetch(addressUrl, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${twilioAuth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      CustomerName: customer.business_name || customer.name,
+      Street: customer.street_address,
+      City: customer.city,
+      Region: customer.state,
+      PostalCode: customer.postcode,
+      IsoCountry: 'AU',
+      FriendlyName: `${customer.business_name || customer.name} - Business Address`,
+    }).toString(),
+  })
+
+  if (!addressResponse.ok) {
+    const errorText = await addressResponse.text()
+    console.error('Twilio address creation failed:', {
+      status: addressResponse.status,
+      body: errorText,
+    })
+
+    let errorMessage = errorText
+    try {
+      const errorJson = JSON.parse(errorText)
+      errorMessage = errorJson.message || errorJson.error || errorText
+    } catch {
+      // If not JSON, use raw text
+    }
+
+    throw new Error(`Failed to create Twilio address: ${errorMessage}`)
+  }
+
+  const addressData = await addressResponse.json()
+  const addressSid = addressData.sid
+
+  console.log(`Created Twilio Address SID: ${addressSid}`)
+
+  // Save Address SID to customer record
+  const { error: updateError } = await supabaseAdmin
+    .from('customers')
+    .update({ twilio_address_sid: addressSid })
+    .eq('id', customer.id)
+
+  if (updateError) {
+    console.error('Failed to save Twilio Address SID:', updateError)
+    // Don't fail the whole operation, just log it
+  }
+
+  return addressSid
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Get authenticated user
@@ -209,15 +297,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get customer with location
+    // Get customer with location and address
     const { data: customer, error: customerError } = await supabaseAdmin
       .from('customers')
-      .select('id, name, business_name, country, state, city')
+      .select(
+        'id, name, business_name, country, state, city, street_address, postcode, twilio_address_sid',
+      )
       .eq('auth_user_id', user.id)
       .single()
 
     if (customerError || !customer) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
+    }
+
+    // Ensure customer has complete address for Australian numbers
+    if (!customer.street_address || !customer.postcode) {
+      return NextResponse.json(
+        {
+          error:
+            'Complete business address is required to provision an Australian phone number. Please provide your street address and postcode.',
+        },
+        { status: 400 },
+      )
     }
 
     // Check if already provisioned
@@ -307,13 +408,36 @@ Always speak in a friendly Australian tone. If it's an emergency, prioritize get
     const agentData = await agentResponse.json()
     const agentId = agentData.agent_id
 
-    // 3. Purchase Twilio number in customer's location
+    // 3. Get or create Twilio Address for regulatory compliance
+    let addressSid: string
+    try {
+      addressSid = await getOrCreateTwilioAddress(customer)
+      console.log(`Using Twilio Address SID: ${addressSid}`)
+    } catch (addressError: any) {
+      console.error('Failed to create Twilio address:', addressError)
+
+      // Clean up the agent
+      await fetch(`https://api.retellai.com/delete-agent/${agentId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${process.env.RETELL_API_KEY}`,
+        },
+      }).catch(() => {})
+
+      return NextResponse.json(
+        { error: `Failed to create address: ${addressError.message}` },
+        { status: 500 },
+      )
+    }
+
+    // 4. Purchase Twilio number in customer's location
     let purchasedNumber: string
     try {
       purchasedNumber = await purchaseTwilioNumber(
         customer.country || 'AU',
         customer.state,
         customer.city,
+        addressSid,
       )
       console.log(`Purchased Twilio number for ${customer.business_name}: ${purchasedNumber}`)
     } catch (purchaseError: any) {
