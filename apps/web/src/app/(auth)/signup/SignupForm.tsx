@@ -12,7 +12,8 @@ import { createBrowserClient } from '@/lib/supabase/client'
 
 export function SignupForm() {
   const searchParams = useSearchParams()
-  const referralCode = searchParams?.get('ref') || null
+  const [mounted, setMounted] = useState(false)
+  const referralCode = mounted ? (searchParams?.get('ref') || null) : null
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -25,6 +26,11 @@ export function SignupForm() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [referrerName, setReferrerName] = useState<string | null>(null)
+
+  // Ensure component is mounted before reading search params
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Australian states for dropdown
   const australianStates = [
