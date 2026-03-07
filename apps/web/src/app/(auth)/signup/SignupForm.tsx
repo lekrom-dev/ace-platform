@@ -1,19 +1,15 @@
 'use client'
 
 /**
- * Signup form component
- * Separated to allow Suspense wrapping for useSearchParams
+ * Signup form component  
  */
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@/lib/supabase/client'
 
 export function SignupForm() {
-  const searchParams = useSearchParams()
-  const [mounted, setMounted] = useState(false)
-  const referralCode = mounted ? (searchParams?.get('ref') || null) : null
+  const [referralCode, setReferralCode] = useState<string | null>(null)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -26,11 +22,6 @@ export function SignupForm() {
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
   const [referrerName, setReferrerName] = useState<string | null>(null)
-
-  // Ensure component is mounted before reading search params
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   // Australian states for dropdown
   const australianStates = [
@@ -46,12 +37,15 @@ export function SignupForm() {
 
   const passwordStrength = password.length >= 8 ? 'strong' : 'weak'
 
-  // Validate referral code on mount
+  // Read referral code from URL (client-side only, avoids Suspense issues)
   useEffect(() => {
-    if (referralCode) {
-      validateReferralCode(referralCode)
+    const params = new URLSearchParams(window.location.search)
+    const ref = params.get('ref')
+    if (ref) {
+      setReferralCode(ref)
+      validateReferralCode(ref)
     }
-  }, [referralCode])
+  }, [])
 
   async function validateReferralCode(code: string) {
     try {
@@ -69,7 +63,6 @@ export function SignupForm() {
       console.error('Error validating referral code:', err)
     }
   }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
