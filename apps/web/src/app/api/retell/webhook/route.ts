@@ -61,16 +61,25 @@ export async function POST(request: NextRequest) {
     const { event: eventType, call } = event
 
     console.log(`[Retell Webhook] Received ${eventType} for call ${call.call_id}`)
+    console.log(`[Retell Webhook] Agent ID: ${call.agent_id}`)
 
     // 3. Find tradie config by agent_id
     const { data: tradieConfig, error: configError } = await supabase
       .from('tradie_configs')
-      .select('id, customer_id')
+      .select('id, customer_id, retell_agent_id')
       .eq('retell_agent_id', call.agent_id)
       .single()
 
     if (configError || !tradieConfig) {
-      console.error('Tradie config not found for agent:', call.agent_id)
+      console.error('[Retell Webhook] Tradie config not found for agent:', call.agent_id)
+      console.error('[Retell Webhook] Database error:', configError)
+
+      // List all agent IDs in database for debugging
+      const { data: allConfigs } = await supabase
+        .from('tradie_configs')
+        .select('retell_agent_id')
+      console.log('[Retell Webhook] Available agent IDs in database:', allConfigs)
+
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 })
     }
 
