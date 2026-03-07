@@ -274,12 +274,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get customer with location and address
+    // Get customer with location
     const { data: customer, error: customerError } = await supabaseAdmin
       .from('customers')
-      .select(
-        'id, name, business_name, country, state, city, street_address, postcode, twilio_address_sid',
-      )
+      .select('id, name, business_name, country, state, city')
       .eq('auth_user_id', user.id)
       .single()
 
@@ -287,14 +285,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Customer not found' }, { status: 404 })
     }
 
-    // Ensure customer has complete address for Australian numbers
-    if (!customer.street_address || !customer.postcode) {
+    // Verify platform has Address SID configured
+    if (!process.env.TWILIO_ADDRESS_SID) {
       return NextResponse.json(
         {
           error:
-            'Complete business address is required to provision an Australian phone number. Please provide your street address and postcode.',
+            'Platform Twilio Address not configured. Please set TWILIO_ADDRESS_SID in environment variables.',
         },
-        { status: 400 },
+        { status: 500 },
       )
     }
 
@@ -385,36 +383,17 @@ Always speak in a friendly Australian tone. If it's an emergency, prioritize get
     const agentData = await agentResponse.json()
     const agentId = agentData.agent_id
 
-    // 3. Get or create Twilio Address for regulatory compliance
-    let addressSid: string
-    try {
-      addressSid = await getOrCreateTwilioAddress(customer)
-      console.log(`Using Twilio Address SID: ${addressSid}`)
-    } catch (addressError: any) {
-      console.error('Failed to create Twilio address:', addressError)
+    // 3. Purchase Twilio number in customer's location (using platform's address)
+    const platformAddressSid = process.env.TWILIO_ADDRESS_SID!
+    console.log(`Using platform Twilio Address SID: ${platformAddressSid}`)
 
-      // Clean up the agent
-      await fetch(`https://api.retellai.com/delete-agent/${agentId}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${process.env.RETELL_API_KEY}`,
-        },
-      }).catch(() => {})
-
-      return NextResponse.json(
-        { error: `Failed to create address: ${addressError.message}` },
-        { status: 500 },
-      )
-    }
-
-    // 4. Purchase Twilio number in customer's location
     let purchasedNumber: string
     try {
       purchasedNumber = await purchaseTwilioNumber(
         customer.country || 'AU',
         customer.state,
         customer.city,
-        addressSid,
+        platformAddressSid,
       )
       console.log(`Purchased Twilio number for ${customer.business_name}: ${purchasedNumber}`)
     } catch (purchaseError: any) {
