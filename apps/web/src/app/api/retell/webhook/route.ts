@@ -6,12 +6,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@ace/db'
-import {
-  verifyWebhookSignature,
-  getSignatureFromHeaders,
-  getWebhookSecret,
-} from '@/lib/retell/webhook'
+import { Retell } from 'retell-sdk'
 import type { RetellWebhookEvent } from '@/lib/retell/types'
+
+// Initialize Retell client
+const retell = new Retell({
+  apiKey: process.env.RETELL_API_KEY!,
+})
 
 // Initialize Supabase with service role key for server-side operations
 const supabase = createClient<Database>(
@@ -21,26 +22,17 @@ const supabase = createClient<Database>(
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Verify webhook signature
+    // 1. Verify webhook signature using Retell SDK
     const body = await request.text()
-    const signature = getSignatureFromHeaders(request.headers)
-
-    // Debug: Log all headers
-    console.log('[Retell Webhook] Headers:', {
-      'x-retell-signature': request.headers.get('x-retell-signature'),
-      'content-type': request.headers.get('content-type'),
-      'user-agent': request.headers.get('user-agent'),
-    })
+    const signature = request.headers.get('x-retell-signature')
 
     if (!signature) {
       console.error('[Retell Webhook] Missing signature header')
       return NextResponse.json({ error: 'Missing signature header' }, { status: 401 })
     }
 
-    const secret = getWebhookSecret()
-    console.log('[Retell Webhook] Secret loaded, length:', secret.length)
-
-    const isValid = verifyWebhookSignature(body, signature, secret)
+    // Verify using Retell SDK (uses RETELL_API_KEY)
+    const isValid = retell.verify(body, process.env.RETELL_API_KEY!, signature)
 
     if (!isValid) {
       console.error('[Retell Webhook] Invalid webhook signature')
