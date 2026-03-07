@@ -13,8 +13,14 @@ import type { RetellWebhookEvent } from '@/lib/retell/types'
 let retellClient: Retell | null = null
 function getRetellClient() {
   if (!retellClient) {
+    const apiKey = process.env.RETELL_API_KEY
+    if (!apiKey) {
+      throw new Error(
+        'RETELL_API_KEY environment variable is not set. Please add it in Vercel → Settings → Environment Variables',
+      )
+    }
     retellClient = new Retell({
-      apiKey: process.env.RETELL_API_KEY!,
+      apiKey: apiKey,
     })
   }
   return retellClient
