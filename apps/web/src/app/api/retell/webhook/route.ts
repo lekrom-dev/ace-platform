@@ -43,9 +43,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing signature header' }, { status: 401 })
     }
 
-    // Verify using Retell SDK (uses RETELL_API_KEY)
-    const retell = getRetellClient()
-    const isValid = retell.verify(body, process.env.RETELL_API_KEY!, signature)
+    // Verify using Retell SDK (uses RETELL_API_KEY as static method)
+    if (!process.env.RETELL_API_KEY) {
+      throw new Error('RETELL_API_KEY environment variable is not set')
+    }
+    const isValid = Retell.verify(body, process.env.RETELL_API_KEY, signature)
 
     if (!isValid) {
       console.error('[Retell Webhook] Invalid webhook signature')
