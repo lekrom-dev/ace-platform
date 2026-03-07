@@ -150,17 +150,23 @@ async function purchaseTwilioNumber(
   // Note: VoiceUrl/SmsUrl will be configured by Retell AI when we register the number
   const purchaseUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/IncomingPhoneNumbers.json`
 
+  const purchaseParams: Record<string, string> = {
+    PhoneNumber: availableNumber,
+    FriendlyName: 'AI Receptionist - Retell',
+  }
+
+  // Add Address SID if available (required for Australian numbers)
+  if (process.env.TWILIO_ADDRESS_SID) {
+    purchaseParams.AddressSid = process.env.TWILIO_ADDRESS_SID
+  }
+
   const purchaseResponse = await fetch(purchaseUrl, {
     method: 'POST',
     headers: {
       Authorization: `Basic ${twilioAuth}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
-    body: new URLSearchParams({
-      PhoneNumber: availableNumber,
-      // FriendlyName helps identify this number in Twilio console
-      FriendlyName: 'AI Receptionist - Retell',
-    }).toString(),
+    body: new URLSearchParams(purchaseParams).toString(),
   })
 
   if (!purchaseResponse.ok) {
