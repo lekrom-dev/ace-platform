@@ -7,20 +7,14 @@ Sentry.init({
   // In production, reduce this to a lower value like 0.1 (10%)
   tracesSampleRate: process.env.NODE_ENV === 'development' ? 1.0 : 0.1,
 
-  // Capture Replay for 10% of all sessions,
-  // plus for 100% of sessions with an error
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
-
   // Set environment
   environment: process.env.NODE_ENV || 'development',
 
-  // You can remove this option if you're not planning to use the Sentry Session Replay feature:
-  integrations: [
-    Sentry.replayIntegration({
-      // Additional Replay configuration goes in here, for example:
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-  ],
+  // Disabled Session Replay - was causing "Multiple Sentry Session Replay instances" error
+  // integrations: [
+  //   Sentry.replayIntegration({
+  //     maskAllText: true,
+  //     blockAllMedia: true,
+  //   }),
+  // ],
 })
