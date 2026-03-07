@@ -81,7 +81,7 @@ async function purchaseTwilioNumber(
   })
 
   if (!searchData.available_phone_numbers || searchData.available_phone_numbers.length === 0) {
-    // Fallback: try without location filters
+    // Fallback 1: try without location filters
     console.log('No numbers found with location filters, trying without filters...')
     const fallbackUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/AvailablePhoneNumbers/${twilioCountry}/Local.json?VoiceEnabled=true&SmsEnabled=true`
 
@@ -92,41 +92,52 @@ async function purchaseTwilioNumber(
       },
     })
 
-    if (!fallbackResponse.ok) {
-      const fallbackError = await fallbackResponse.text()
-      console.error('Twilio fallback search failed:', {
-        status: fallbackResponse.status,
-        statusText: fallbackResponse.statusText,
-        body: fallbackError,
-        country: twilioCountry,
+    if (fallbackResponse.ok) {
+      const fallbackData = await fallbackResponse.json()
+      console.log(`Twilio Local fallback results:`, {
+        count: fallbackData.available_phone_numbers?.length || 0,
       })
-      throw new Error(
-        `No phone numbers available in this region: ${fallbackResponse.status} - ${fallbackError}`,
-      )
+      if (fallbackData.available_phone_numbers?.length > 0) {
+        searchData.available_phone_numbers = fallbackData.available_phone_numbers
+      }
     }
 
-    const fallbackData = await fallbackResponse.json()
-    console.log(`Twilio fallback results:`, {
-      count: fallbackData.available_phone_numbers?.length || 0,
-    })
+    // Fallback 2: try Mobile numbers (more readily available in AU)
+    if (!searchData.available_phone_numbers || searchData.available_phone_numbers.length === 0) {
+      console.log('No Local numbers found, trying Mobile numbers...')
+      const mobileUrl = `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/AvailablePhoneNumbers/${twilioCountry}/Mobile.json?VoiceEnabled=true&SmsEnabled=true`
 
-    if (
-      !fallbackData.available_phone_numbers ||
-      fallbackData.available_phone_numbers.length === 0
-    ) {
+      const mobileResponse = await fetch(mobileUrl, {
+        method: 'GET',
+        headers: {
+          Authorization: `Basic ${twilioAuth}`,
+        },
+      })
+
+      if (mobileResponse.ok) {
+        const mobileData = await mobileResponse.json()
+        console.log(`Twilio Mobile results:`, {
+          count: mobileData.available_phone_numbers?.length || 0,
+        })
+        if (mobileData.available_phone_numbers?.length > 0) {
+          searchData.available_phone_numbers = mobileData.available_phone_numbers
+        }
+      }
+    }
+
+    // If still no numbers found, throw error
+    if (!searchData.available_phone_numbers || searchData.available_phone_numbers.length === 0) {
       console.error('No phone numbers available at all for country:', twilioCountry)
       throw new Error(
-        `No phone numbers available in ${twilioCountry}. Please enable Australian phone numbers in your Twilio account:\n\n` +
-          `1. Go to: https://console.twilio.com/us1/develop/phone-numbers/manage/search\n` +
-          `2. Select country: ${twilioCountry}\n` +
-          `3. If no numbers available, check:\n` +
-          `   - Account is upgraded (not trial)\n` +
-          `   - Australian numbers are enabled for your account\n` +
-          `   - Address verification is complete (if required)\n\n` +
+        `No phone numbers available in ${twilioCountry}. Please check:\n\n` +
+          `1. Go to Twilio Console: https://console.twilio.com/us1/develop/phone-numbers/manage/search\n` +
+          `2. Can you see available numbers for Australia?\n` +
+          `3. If yes, you may need to complete regulatory requirements:\n` +
+          `   - Go to: https://console.twilio.com/us1/develop/phone-numbers/regulatory-compliance\n` +
+          `   - Complete any pending bundles\n` +
+          `4. Contact Twilio support to enable Australian numbers for your account\n\n` +
           `For help: https://www.twilio.com/docs/phone-numbers/regulatory/getting-started`,
       )
-    } else {
-      searchData.available_phone_numbers = fallbackData.available_phone_numbers
     }
   }
 
